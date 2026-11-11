@@ -1,8 +1,12 @@
+# ---Django---
+from django.db.models import Sum
+
 # ---Drf---
 from rest_framework import serializers
 
 # ---Model---
 from customers.models import Customer
+from invoices.models import Invoice
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -22,6 +26,9 @@ class CustomerSerializer(serializers.ModelSerializer):
         },
     )
 
+    total_orders = serializers.SerializerMethodField()
+    lifetime_spending = serializers.SerializerMethodField()
+
     class Meta:
         model = Customer
         fields = [
@@ -30,6 +37,8 @@ class CustomerSerializer(serializers.ModelSerializer):
             "name",
             "phone",
             "address",
+            "total_orders",
+            "lifetime_spending",
             "active_status",
             "created_date",
             "updated_date",
@@ -79,3 +88,27 @@ class CustomerSerializer(serializers.ModelSerializer):
                 )
 
         return data
+
+    def get_total_orders(self, obj):
+
+        request = self.context.get("request")
+        tenant = request.user.tenant
+
+        total_orders = Invoice.objects.filter(
+            tenant=tenant, status=Invoice.Status.PAID, customer=obj
+        ).count()
+
+        return total_orders
+
+    def get_lifetime_spending(self, obj):
+
+        request = self.context.get("request")
+        tenant = request.user.tenant
+
+        invoice = Invoice.objects.filter(
+            tenant=tenant, status=Invoice.Status.PAID, customer=obj
+        ).aggregate(lifetime_spending=Sum("total"))
+
+        lifetime_spending = invoice["lifetime_spending"] or 0
+
+        return lifetime_spending

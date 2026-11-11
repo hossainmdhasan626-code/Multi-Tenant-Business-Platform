@@ -41,13 +41,15 @@ class CustomerServices:
         return serializ_data.data
 
     # নির্দিষ্ট কাস্টমার এর ডাটা বের করে আনা।
-    def customer_detail(self, tenant, id):
+    def customer_detail(self, request, tenant, id):
 
         customer_data = Customer.objects.filter(tenant=tenant, id=id).first()
 
         if not customer_data:
             return None
-        serializ_data = CustomerSerializer(customer_data)
+        serializ_data = CustomerSerializer(
+            instance=customer_data, context={"request": request}
+        )
         return serializ_data.data
 
     def customer_update(self, request, tenant, customer_data, id):

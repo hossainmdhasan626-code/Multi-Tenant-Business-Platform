@@ -60,7 +60,7 @@ class CustomerDetailUpdateDeleteAPIView(APIView):
     def get(self, request, pk):
 
         customer_data = CustomerServices().customer_detail(
-            tenant=request.user.tenant, id=pk
+            request=request, tenant=request.user.tenant, id=pk
         )
 
         return Response(

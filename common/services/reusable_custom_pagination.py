@@ -10,6 +10,8 @@ def reusable_custom_pagination(
 
     paginated_data = paginator.paginate_queryset(queryset, request, view=view_instance)
 
-    serializer = serializer_class(instance=paginated_data, many=True)
+    serializer = serializer_class(
+        instance=paginated_data, many=True, context={"request": request}
+    )
 
     return paginator.get_paginated_response(serializer.data).data
