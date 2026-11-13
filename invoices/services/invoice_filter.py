@@ -13,7 +13,9 @@ from invoices.serializers import InvoicesSerializer
 
 def invoice_filter(request, view_instance):
 
-    invoice_data = Invoice.objects.filter(tenant=request.user.tenant)
+    invoice_data = Invoice.objects.filter(tenant=request.user.tenant).prefetch_related(
+        "sale_items"
+    )
 
     status = request.query_params.get("status")
     customer = request.query_params.get("customer")

@@ -1,12 +1,11 @@
 # ---Django---
-from django.db.models import Sum
+from django.db.models.functions import Coalesce
 
 # ---Drf---
 from rest_framework import serializers
 
 # ---Model---
 from customers.models import Customer
-from invoices.models import Invoice
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -43,7 +42,14 @@ class CustomerSerializer(serializers.ModelSerializer):
             "created_date",
             "updated_date",
         ]
-        read_only_fields = ["id", "tenant", "created_date", "updated_date"]
+        read_only_fields = [
+            "id",
+            "tenant",
+            "total_orders",
+            "lifetime_spending",
+            "created_date",
+            "updated_date",
+        ]
 
     # নাম কে খালি রাখা যাবে না।
     # def validate_name(self, value):
@@ -91,24 +97,8 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     def get_total_orders(self, obj):
 
-        request = self.context.get("request")
-        tenant = request.user.tenant
-
-        total_orders = Invoice.objects.filter(
-            tenant=tenant, status=Invoice.Status.PAID, customer=obj
-        ).count()
-
-        return total_orders
+        return getattr(obj, "total_orders_count", 0)
 
     def get_lifetime_spending(self, obj):
 
-        request = self.context.get("request")
-        tenant = request.user.tenant
-
-        invoice = Invoice.objects.filter(
-            tenant=tenant, status=Invoice.Status.PAID, customer=obj
-        ).aggregate(lifetime_spending=Sum("total"))
-
-        lifetime_spending = invoice["lifetime_spending"] or 0
-
-        return lifetime_spending
+        return getattr(obj, "lifetime_spending", 0)

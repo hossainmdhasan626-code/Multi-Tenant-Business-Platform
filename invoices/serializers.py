@@ -9,7 +9,7 @@ from sale_items.serializers import SaleItemSerializers
 
 
 class InvoicesSerializer(serializers.ModelSerializer):
-    sale_item = SaleItemSerializers(many=True, read_only=True)
+    sale_items = SaleItemSerializers(many=True, read_only=True)
 
     class Meta:
         model = Invoice
@@ -22,7 +22,7 @@ class InvoicesSerializer(serializers.ModelSerializer):
             "subtotal",
             "discount",
             "total",
-            "sale_item",
+            "sale_items",
             "status",
             "delivery_status",
             "created_date",

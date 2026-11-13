@@ -11,7 +11,7 @@ from invoices.serializers import InvoicesSerializer
 def get_invoices_details(tenant, pk):
 
     try:
-        data = Invoice.objects.get(tenant=tenant, id=pk)
+        data = Invoice.objects.prefetch_related("sale_items").get(tenant=tenant, id=pk)
     except Invoice.DoesNotExist:
         raise NotFound("ইনভয়েসটি ভেলিড নয়।")
 

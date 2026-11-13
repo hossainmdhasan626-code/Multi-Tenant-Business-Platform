@@ -1,5 +1,9 @@
 # ---Django---
-from django.db.models import Q
+from django.db.models import Count, IntegerField, Q, Sum
+from django.db.models.functions import Coalesce
+
+# ---Drf---
+from rest_framework.exceptions import NotFound
 
 # ---Custom pagination---
 from common.services.reusable_custom_pagination import reusable_custom_pagination
@@ -10,12 +14,20 @@ from customers.models import Customer
 # ---Serializer---
 from customers.serializer import CustomerSerializer
 
+# ---Services---
+from customers.services.total_order_count_and_lifetime_spending import (
+    total_order_count_and_lifetime_spending,
+)
+from invoices.models import Invoice
+
 
 class CustomerServices:
     # কাস্টমার এর ডাটা বের(get) এবং সার্চ করে আনার জন্য।
     def get_customer(self, tenant, request, view_instance, search_query=None):
 
-        customer_data = Customer.objects.filter(tenant=tenant)
+        query_set = Customer.objects.filter(tenant=tenant)
+
+        customer_data = total_order_count_and_lifetime_spending(query_set=query_set)
 
         if search_query:
             customer_data = customer_data.filter(
@@ -43,23 +55,34 @@ class CustomerServices:
     # নির্দিষ্ট কাস্টমার এর ডাটা বের করে আনা।
     def customer_detail(self, request, tenant, id):
 
-        customer_data = Customer.objects.filter(tenant=tenant, id=id).first()
+        query_set = Customer.objects.filter(tenant=tenant, id=id)
 
-        if not customer_data:
-            return None
+        customer_data = total_order_count_and_lifetime_spending(
+            query_set=query_set
+        ).first()
+
+        if customer_data is None:
+            raise NotFound("আপনার চাওয়া কাস্টমার পাওয়া যায়নি।")
+
         serializ_data = CustomerSerializer(
             instance=customer_data, context={"request": request}
         )
         return serializ_data.data
 
     def customer_update(self, request, tenant, customer_data, id):
-        data = Customer.objects.filter(tenant=tenant, id=id).first()
 
-        if not customer_data:
-            return None
+        query_set = Customer.objects.filter(tenant=tenant, id=id)
+
+        data = total_order_count_and_lifetime_spending(query_set=query_set).first()
+
+        if data is None:
+            raise NotFound("আপনার চাওয়া কাস্টমার পাওয়া যায়নি।")
 
         serializ_data = CustomerSerializer(
-            data, data=customer_data, context={"request": request}, partial=True
+            instance=data,
+            data=customer_data,
+            context={"request": request},
+            partial=True,
         )
         serializ_data.is_valid(raise_exception=True)
         serializ_data.save()
@@ -67,10 +90,10 @@ class CustomerServices:
 
     def customer_delete(self, tenant, id):
 
-        customer_data = Customer.objects.filter(tenant=tenant, id=id).first()
+        try:
+            query_set = Customer.objects.get(tenant=tenant, id=id)
+        except Customer.DoesNotExist:
+            raise NotFound("আপনার চাওয়া কাস্টমার পাওয়া যায়নি।")
 
-        if not customer_data:
-            return False
-
-        customer_data.delete()
+        query_set.delete()
         return True
