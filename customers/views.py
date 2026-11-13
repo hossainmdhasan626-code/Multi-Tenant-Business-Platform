@@ -48,7 +48,7 @@ class CustomerCreateAPIView(APIView):
         )
 
 
-class CustomerDetailUpdateDeleteAPIView(APIView):
+class CustomerDetailUpdateAPIView(APIView):
     def get_permissions(self):
 
         if self.request.method == "GET":
@@ -86,20 +86,4 @@ class CustomerDetailUpdateDeleteAPIView(APIView):
         return Response(
             {"message": "Customer updated successfully.", "data": customer_data},
             status=status.HTTP_200_OK,
-        )
-
-    # নির্দিষ্ট কাস্টমার এর ডাটা delete এর জন্য।
-    def delete(self, request, pk):
-
-        customer_data = CustomerServices().customer_delete(
-            tenant=request.user.tenant, id=pk
-        )
-
-        if not customer_data:
-            return Response(
-                {"message": "Customer not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-
-        return Response(
-            {"message": "Deleted successfully."}, status=status.HTTP_204_NO_CONTENT
         )

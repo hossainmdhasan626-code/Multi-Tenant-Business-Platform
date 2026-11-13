@@ -1,6 +1,5 @@
 # ---Django---
-from django.db.models import Count, IntegerField, Q, Sum
-from django.db.models.functions import Coalesce
+from django.db.models import Q
 
 # ---Drf---
 from rest_framework.exceptions import NotFound
@@ -18,7 +17,6 @@ from customers.serializer import CustomerSerializer
 from customers.services.total_order_count_and_lifetime_spending import (
     total_order_count_and_lifetime_spending,
 )
-from invoices.models import Invoice
 
 
 class CustomerServices:
@@ -87,13 +85,3 @@ class CustomerServices:
         serializ_data.is_valid(raise_exception=True)
         serializ_data.save()
         return serializ_data.data
-
-    def customer_delete(self, tenant, id):
-
-        try:
-            query_set = Customer.objects.get(tenant=tenant, id=id)
-        except Customer.DoesNotExist:
-            raise NotFound("আপনার চাওয়া কাস্টমার পাওয়া যায়নি।")
-
-        query_set.delete()
-        return True

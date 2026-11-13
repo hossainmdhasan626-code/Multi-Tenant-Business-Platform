@@ -5,7 +5,7 @@ from django.urls import path
 from customers.views import (
     CustomerAPIView,
     CustomerCreateAPIView,
-    CustomerDetailUpdateDeleteAPIView,
+    CustomerDetailUpdateAPIView,
 )
 
 urlpatterns = [
@@ -13,7 +13,7 @@ urlpatterns = [
     path("create/", CustomerCreateAPIView.as_view(), name="customer-create"),
     path(
         "<int:pk>/",
-        CustomerDetailUpdateDeleteAPIView.as_view(),
+        CustomerDetailUpdateAPIView.as_view(),
         name="customer-detail-update-delete",
     ),
 ]
